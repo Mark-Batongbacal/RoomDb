@@ -4,10 +4,12 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room.databaseBuilder
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
     entities = [Student::class],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 
@@ -15,6 +17,12 @@ abstract class StudentDatabase: RoomDatabase() {
     abstract fun studentDao(): StudentDao
 
     companion object{
+        val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE students ADD COLUMN age INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
         @Volatile
         private var INSTANCE: StudentDatabase? = null
 
@@ -24,7 +32,7 @@ abstract class StudentDatabase: RoomDatabase() {
                     context.applicationContext,
                     StudentDatabase::class.java,
                     "student_database"
-                ).build()
+                ).addMigrations(MIGRATION_1_2).build()
 
                 INSTANCE = instance
 
